@@ -32,8 +32,8 @@ export class Particle {
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
     ctx.fillStyle = this.color;
-    ctx.shadowColor = this.color;
-    ctx.shadowBlur = 8;
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = "transparent";
     ctx.fill();
     ctx.restore();
   }

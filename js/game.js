@@ -99,14 +99,17 @@ class Fruit {
     if (this.isSliced) return; // Guard: Never draw sliced fruit
 
     ctx.save();
+    ctx.globalAlpha = 1.0;
     ctx.translate(this.x, this.y);
     ctx.rotate(this.rotation);
 
     ctx.font = `${Math.round(this.radius * 1.85)}px serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.shadowColor = this.color;
-    ctx.shadowBlur = 18;
+    // Crisp dark drop shadow for maximum emoji contrast & vibrancy (no muddy colored blur)
+    ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
+    ctx.shadowBlur = 6;
+    ctx.shadowOffsetY = 3;
     ctx.fillText(this.emoji, 0, 0);
 
     ctx.restore();
@@ -146,14 +149,16 @@ class Bomb {
     if (this.isSliced) return; // Guard: Never draw sliced bomb
 
     ctx.save();
+    ctx.globalAlpha = 1.0;
     ctx.translate(this.x, this.y);
     ctx.rotate(this.rotation);
 
     ctx.font = `${Math.round(this.radius * 1.85)}px serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.shadowColor = "#ff0044";
-    ctx.shadowBlur = 24;
+    ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+    ctx.shadowBlur = 6;
+    ctx.shadowOffsetY = 3;
     ctx.fillText("💣", 0, 0);
 
     ctx.restore();
@@ -206,8 +211,9 @@ class FruitHalf {
     ctx.font = `${Math.round(this.radius * 1.85)}px serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.shadowColor = this.color;
-    ctx.shadowBlur = 12;
+    ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
+    ctx.shadowBlur = 6;
+    ctx.shadowOffsetY = 3;
     ctx.fillText(this.emoji, 0, 0);
 
     ctx.restore();
@@ -318,10 +324,10 @@ function updateAndDrawMissIndicators(ctx) {
     ctx.save();
     ctx.globalAlpha = m.alpha;
     ctx.font = `bold ${Math.round(40 * m.scale)}px sans-serif`;
-    ctx.fillStyle = "#ff0044";
+    ctx.fillStyle = "#ff4455";
     ctx.textAlign = "center";
-    ctx.shadowColor = "#ff0044";
-    ctx.shadowBlur = 15;
+    ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
+    ctx.shadowBlur = 3;
     ctx.fillText("❌", m.x, m.y);
     ctx.restore();
   }
@@ -377,25 +383,31 @@ function drawHUD(ctx) {
   ctx.save();
 
   // Score HUD
-  ctx.font = "bold 28px 'Segoe UI', sans-serif";
+  ctx.font = "bold 26px 'Segoe UI', Roboto, sans-serif";
   ctx.fillStyle = "#ffffff";
-  ctx.shadowColor = "#00f3ff";
-  ctx.shadowBlur = 10;
-  ctx.fillText(`Score: ${score}`, 30, 50);
+  ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
+  ctx.shadowBlur = 4;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 2;
+  ctx.textAlign = "left";
+  ctx.fillText(`Score: ${score}`, 30, 48);
 
-  // Lives HUD
+  // Lives HUD - Clean, flat design (no colored glow, subtle drop shadow for depth)
   ctx.textAlign = "center";
   let livesText = "";
   for (let i = 0; i < 3; i++) {
-    livesText += i < lives ? "❤️ " : "❌ ";
+    livesText += i < lives ? "❤️ " : "🖤 ";
   }
   ctx.font = "26px sans-serif";
-  ctx.fillText(livesText.trim(), canvas.width / 2, 50);
+  ctx.shadowColor = "rgba(0, 0, 0, 0.35)";
+  ctx.shadowBlur = 3;
+  ctx.shadowOffsetY = 2;
+  ctx.fillText(livesText.trim(), canvas.width / 2, 48);
 
   // Mode Indicator
   ctx.textAlign = "right";
-  ctx.font = "14px 'Segoe UI', sans-serif";
-  ctx.fillStyle = "rgba(0, 243, 255, 0.8)";
+  ctx.font = "600 14px 'Segoe UI', Roboto, sans-serif";
+  ctx.fillStyle = "rgba(240, 240, 245, 0.85)";
   ctx.shadowBlur = 0;
   ctx.fillText("Gesture Control Active", canvas.width - 30, 45);
 
@@ -405,25 +417,44 @@ function drawHUD(ctx) {
 // --- ON-SCREEN PROMPTS & COUNTDOWN ---
 function drawWaitingForHand(ctx) {
   ctx.save();
-  const pulse = Math.sin(performance.now() * 0.005) * 5;
+  const pulse = Math.sin(performance.now() * 0.005) * 4;
 
-  ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
-  ctx.fillRect(canvas.width / 2 - 240, canvas.height / 2 - 80 + pulse, 480, 140);
-  ctx.strokeStyle = "rgba(0, 243, 255, 0.6)";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(canvas.width / 2 - 240, canvas.height / 2 - 80 + pulse, 480, 140);
+  const cardWidth = 460;
+  const cardHeight = 130;
+  const cardX = canvas.width / 2 - cardWidth / 2;
+  const cardY = canvas.height / 2 - cardHeight / 2 + pulse;
+
+  // Modern dark glassmorphism card
+  ctx.fillStyle = "rgba(22, 25, 35, 0.88)";
+  ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+  ctx.shadowBlur = 16;
+  ctx.shadowOffsetY = 6;
+
+  ctx.beginPath();
+  if (ctx.roundRect) {
+    ctx.roundRect(cardX, cardY, cardWidth, cardHeight, 16);
+  } else {
+    ctx.rect(cardX, cardY, cardWidth, cardHeight);
+  }
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Reset shadow for text
+  ctx.shadowColor = "rgba(0, 0, 0, 0.3)";
+  ctx.shadowBlur = 4;
+  ctx.shadowOffsetY = 2;
 
   ctx.textAlign = "center";
-  ctx.font = "bold 26px 'Segoe UI', sans-serif";
+  ctx.font = "bold 24px 'Segoe UI', Roboto, sans-serif";
   ctx.fillStyle = "#ffffff";
-  ctx.shadowColor = "#00f3ff";
-  ctx.shadowBlur = 12;
-  ctx.fillText("🖐️ Show your hand to the camera", canvas.width / 2, canvas.height / 2 - 30 + pulse);
+  ctx.fillText("🖐️ Show your hand to the camera", canvas.width / 2, cardY + 50);
 
-  ctx.font = "16px 'Segoe UI', sans-serif";
-  ctx.fillStyle = "#00f3ff";
-  ctx.shadowBlur = 0;
-  ctx.fillText("Raise your index finger to start!", canvas.width / 2, canvas.height / 2 + 20 + pulse);
+  ctx.font = "500 15px 'Segoe UI', Roboto, sans-serif";
+  ctx.fillStyle = "#d0d4e0";
+  ctx.fillText("Raise your index finger to start!", canvas.width / 2, cardY + 90);
 
   ctx.restore();
 }
@@ -434,12 +465,13 @@ function drawCountdown(ctx) {
   ctx.textBaseline = "middle";
 
   const numText = countdownValue > 0 ? `${countdownValue}` : "GO!";
-  const scale = 1 + (countdownTimer % 60) / 60;
+  const scale = 1 + (countdownTimer % 60) / 60 * 0.12;
 
-  ctx.font = `900 ${Math.round(90 * scale)}px 'Segoe UI', sans-serif`;
-  ctx.fillStyle = countdownValue > 0 ? "#00f3ff" : "#00ff66";
-  ctx.shadowColor = countdownValue > 0 ? "#00f3ff" : "#00ff66";
-  ctx.shadowBlur = 30;
+  ctx.font = `900 ${Math.round(92 * scale)}px 'Segoe UI', Roboto, sans-serif`;
+  ctx.fillStyle = "#ffffff";
+  ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+  ctx.shadowBlur = 10;
+  ctx.shadowOffsetY = 4;
   ctx.fillText(numText, canvas.width / 2, canvas.height / 2);
 
   ctx.restore();
@@ -452,14 +484,30 @@ function drawInstructionOverlay(ctx) {
   ctx.globalAlpha = instructionAlpha;
   ctx.textAlign = "center";
 
-  ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-  ctx.fillRect(canvas.width / 2 - 250, 90, 500, 50);
+  const bannerWidth = 460;
+  const bannerHeight = 44;
+  const bannerX = canvas.width / 2 - bannerWidth / 2;
+  const bannerY = 85;
 
-  ctx.font = "bold 22px 'Segoe UI', sans-serif";
-  ctx.fillStyle = "#00f3ff";
-  ctx.shadowColor = "#00f3ff";
-  ctx.shadowBlur = 15;
-  ctx.fillText("✨ Swipe your finger fast to slice fruit! ✨", canvas.width / 2, 123);
+  ctx.fillStyle = "rgba(22, 25, 35, 0.85)";
+  ctx.beginPath();
+  if (ctx.roundRect) {
+    ctx.roundRect(bannerX, bannerY, bannerWidth, bannerHeight, 12);
+  } else {
+    ctx.rect(bannerX, bannerY, bannerWidth, bannerHeight);
+  }
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.font = "600 18px 'Segoe UI', Roboto, sans-serif";
+  ctx.fillStyle = "#ffffff";
+  ctx.shadowColor = "rgba(0, 0, 0, 0.3)";
+  ctx.shadowBlur = 4;
+  ctx.shadowOffsetY = 2;
+  ctx.fillText("✨ Swipe your finger fast to slice fruit! ✨", canvas.width / 2, bannerY + 28);
 
   ctx.restore();
 }
@@ -607,7 +655,7 @@ function gameLoop() {
     ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
     ctx.fillRect(20, 20, 580, 55);
     ctx.font = "16px 'Segoe UI', sans-serif";
-    ctx.fillStyle = statusText.startsWith("Error") ? "#ff4444" : "#00f3ff";
+    ctx.fillStyle = statusText.startsWith("Error") ? "#ff4444" : "#e0e4ec";
     ctx.fillText(statusText, 35, 53);
   }
 

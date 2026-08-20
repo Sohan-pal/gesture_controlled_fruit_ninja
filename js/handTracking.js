@@ -144,53 +144,42 @@ export function drawBladeTrails(ctx) {
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
 
+    // Zero blur/glow radius (completely remove shadow blur & shadow color glow)
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = "transparent";
+
     const len = points.length;
 
-    // 1. Draw glowing blade streak line segments
+    // Draw slim, clean white/silver streak tapering and fading from newest (tip) to oldest (tail)
     if (len >= 2) {
       for (let i = 1; i < len; i++) {
         const p1 = points[i - 1];
         const p2 = points[i];
 
+        // progress: 0 at oldest point (tail), 1.0 at newest point (tip)
         const progress = i / (len - 1);
-        const alpha = 0.2 + progress * 0.8;
-        const lineWidth = 4 + progress * 14;
+
+        // Opacity decreases from 1.0 at newest point to 0.0 at oldest point
+        const alpha = Math.pow(progress, 1.2);
+
+        // Slim line width: 4.0px max at tip tapering down to 0.5px at tail
+        const lineWidth = 0.5 + progress * 3.5;
 
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
         ctx.lineTo(p2.x, p2.y);
-
         ctx.lineWidth = lineWidth;
-        ctx.strokeStyle = h === 0 
-          ? `rgba(0, 243, 255, ${alpha})`   // Hand 0: Neon Cyan
-          : `rgba(255, 0, 127, ${alpha})`;  // Hand 1: Neon Pink
-
-        ctx.shadowColor = h === 0 ? "#00f3ff" : "#ff007f";
-        ctx.shadowBlur = 18 * progress + 6;
-
+        ctx.strokeStyle = `rgba(232, 232, 232, ${alpha})`;
         ctx.stroke();
       }
     }
 
-    // 2. ALWAYS draw visible glowing blade tip target indicator at current fingertip position
+    // Small, simple, non-glowing 2.5px white dot at the fingertip
     const tip = points[len - 1];
-    
-    // Core white dot
     ctx.beginPath();
-    ctx.arc(tip.x, tip.y, 8, 0, 2 * Math.PI);
+    ctx.arc(tip.x, tip.y, 2.5, 0, 2 * Math.PI);
     ctx.fillStyle = "#ffffff";
-    ctx.shadowColor = h === 0 ? "#00f3ff" : "#ff007f";
-    ctx.shadowBlur = 22;
     ctx.fill();
-
-    // Outer pulsing target ring
-    const pulseRadius = 16 + Math.sin(performance.now() * 0.008) * 3;
-    ctx.beginPath();
-    ctx.arc(tip.x, tip.y, pulseRadius, 0, 2 * Math.PI);
-    ctx.strokeStyle = h === 0 ? "rgba(0, 243, 255, 0.9)" : "rgba(255, 0, 127, 0.9)";
-    ctx.lineWidth = 3;
-    ctx.shadowBlur = 14;
-    ctx.stroke();
 
     ctx.restore();
   }
