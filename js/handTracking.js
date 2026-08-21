@@ -1,5 +1,13 @@
 import { HandLandmarker, FilesetResolver } from "../vendor/mediapipe/vision_bundle.mjs";
 
+// Resolve the MediaPipe asset directory relative to THIS module, not the HTML
+// document. MediaPipe loads the WASM runtime via an injected <script src=...> and
+// fetches the model, both of which resolve against the page URL — so a bare
+// "../vendor/..." only works when the page is served from the domain root. On a
+// GitHub Pages project subfolder it resolved to /vendor/... (404). import.meta.url
+// pins it to the module's own location, which is correct on any deploy path.
+const MP_ASSET_DIR = new URL("../vendor/mediapipe", import.meta.url).href;
+
 let handLandmarker = null;
 let videoElement = null;
 let lastVideoTime = -1;
@@ -38,12 +46,12 @@ export async function initHandTracking(video) {
     };
   });
 
-  const vision = await FilesetResolver.forVisionTasks("../vendor/mediapipe");
+  const vision = await FilesetResolver.forVisionTasks(MP_ASSET_DIR);
 
   console.log("[HandTracking] Initializing HandLandmarker model...");
   handLandmarker = await HandLandmarker.createFromOptions(vision, {
     baseOptions: {
-      modelAssetPath: "../vendor/mediapipe/hand_landmarker.task",
+      modelAssetPath: `${MP_ASSET_DIR}/hand_landmarker.task`,
       delegate: "GPU"
     },
     runningMode: "VIDEO",

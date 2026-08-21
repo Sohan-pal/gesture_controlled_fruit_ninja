@@ -40,7 +40,6 @@ initHandTracking(video)
 let gameState = "WAITING_FOR_HAND";
 let score = 0;
 let lives = 3;
-let lastLifeLostTime = 0;
 
 let countdownValue = 3;
 let countdownTimer = 0;
@@ -344,7 +343,6 @@ function restartGame() {
   gameState = "WAITING_FOR_HAND";
   score = 0;
   lives = 3;
-  lastLifeLostTime = 0;
   instructionAlpha = 1.0;
   fruits = [];
   fruitHalves = [];
@@ -580,8 +578,6 @@ function gameLoop() {
       nextSpawnInterval = Math.floor(Math.random() * 40) + 90;
     }
 
-    const nowTime = performance.now();
-
     // Update & Draw Active Whole Fruits / Bombs
     for (let i = fruits.length - 1; i >= 0; i--) {
       const item = fruits[i];
@@ -599,14 +595,16 @@ function gameLoop() {
       if (!item.hasScoredMiss && item.y > canvas.height + item.radius + 10 && item.vy > 0) {
         item.hasScoredMiss = true;
         if (!item.isBomb) {
-          if (nowTime - lastLifeLostTime > 1000) {
-            lives--;
-            lastLifeLostTime = nowTime;
-            addMissIndicator(item.x, item.y);
+          // Each missed fruit costs exactly one life. The per-fruit hasScoredMiss
+          // flag already prevents the same fruit being counted twice, so no global
+          // time cooldown is needed. (The old 1s cooldown meant two fruits missed
+          // together cost only a single life, and any fruit that fell during the
+          // cooldown window was silently forgiven.)
+          lives--;
+          addMissIndicator(item.x, item.y);
 
-            if (lives <= 0) {
-              triggerGameOver();
-            }
+          if (lives <= 0) {
+            triggerGameOver();
           }
         }
       }
